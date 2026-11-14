@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>お天気お出かけコンシェルジュ | 天気予報 &amp; おすすめスポットダッシュボード</title>
+  <meta name="description" content="現在と週間の天気予報に合わせて、今いちばん快適に過ごせるお出かけスポット・服装・代替プランを提案するダッシュボードアプリ。" />
+  <link rel="stylesheet" href="/styles/main.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-top">
+        <div class="brand-block">
+          <div class="title-row">
+            <h1 class="app-title">お天気お出かけコンシェルジュ</h1>
+            <span id="data-source-badge" class="status-badge">予報モデル表示中</span>
+          </div>
+          <p class="app-subtitle">
+            天候・気温・降水確率に合わせて、今いちばん快適に過ごせるスポットをリアルタイム提案します。
+          </p>
+        </div>
+
+        <div class="header-controls">
+          <div class="control-pill">
+            <label for="city-select" class="control-label">エリア</label>
+            <select id="city-select" class="city-select">
+              <option value="tokyo">東京（渋谷・丸の内）</option>
+              <option value="yokohama">横浜（みなとみらい）</option>
+              <option value="kyoto">京都（東山・嵐山）</option>
+              <option value="osaka">大阪（梅田・難波）</option>
+              <option value="sapporo">札幌（大通・藻岩）</option>
+              <option value="fukuoka">福岡（天神・糸島）</option>
+              <option value="naha">那覇（首里・瀬長島）</option>
+            </select>
+          </div>
+
+          <div class="segmented-group" role="group" aria-label="温度単位切替">
+            <button id="unit-c" type="button" class="seg-btn active">°C</button>
+            <button id="unit-f" type="button" class="seg-btn">°F</button>
+          </div>
+
+          <button id="theme-toggle-btn" type="button" class="action-btn" aria-label="テーマ切替">
+            <span id="theme-toggle-icon" aria-hidden="true">🌙</span>
+            <span id="theme-toggle-label">ダーク</span>
+          </button>
+
+          <button id="sync-live-btn" type="button" class="action-btn">
+            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+              <path d="M16 16h5v5" />
+            </svg>
+            <span id="sync-live-label">最新予報を取得</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Weather Scenario Bar -->
+      <div class="scenario-bar">
+        <div class="scenario-caption">
+          <strong>天気を試す</strong>
+          <span>クリックすると、その天候に合わせたおすすめスポットへ即座に切り替わります</span>
+        </div>
+        <div id="scenario-pills" class="scenario-pills"></div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <!-- Weather Hero & Outing Advice -->
+      <section class="grid-12" aria-label="天気概況とお出かけアドバイス">
+        <div class="card col-span-7 hero-card">
+          <div class="hero-top">
+            <div class="hero-primary">
+              <div class="meta-row">
+                <span id="selected-date-label" class="pill-primary">今日</span>
+                <span id="selected-city-sub" class="muted-text">東京都渋谷区・千代田区周辺</span>
+              </div>
+              <div class="hero-temp-row">
+                <div id="hero-weather-icon" class="hero-icon animate-float"></div>
+                <div>
+                  <div class="temp-line">
+                    <span id="hero-temp" class="hero-temp tabular-nums">18°C</span>
+                    <span id="hero-feels" class="feels-like tabular-nums">体感 17°C</span>
+                  </div>
+                  <p id="hero-condition-text" class="condition-text">快晴・晴れ</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="sun-box">
+              <div class="muted-xs">最高 / 最低気温</div>
+              <div id="hero-high-low" class="high-low tabular-nums">19° / 10°</div>
+              <div id="hero-pressure-sunrise" class="muted-xs tabular-nums">日の出 06:14 • 日の入 16:36</div>
+            </div>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-tile">
+              <div class="muted-xs">降水確率</div>
+              <div id="metric-rain" class="metric-val tabular-nums">10%</div>
+              <div id="metric-rain-note" class="muted-xs">傘はほぼ不要</div>
+            </div>
+            <div class="metric-tile">
+              <div class="muted-xs">湿度</div>
+              <div id="metric-humidity" class="metric-val tabular-nums">45%</div>
+              <div id="metric-humidity-note" class="muted-xs">快適な湿度</div>
+            </div>
+            <div class="metric-tile">
+              <div class="muted-xs">風速</div>
+              <div id="metric-wind" class="metric-val tabular-nums">2.2 m/s</div>
+              <div id="metric-wind-note" class="muted-xs">穏やかな風</div>
+            </div>
+            <div class="metric-tile">
+              <div class="muted-xs">UV指数</div>
+              <div id="metric-uv" class="metric-val tabular-nums">4 (中)</div>
+              <div id="metric-uv-note" class="muted-xs">適度に日差し対策</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card col-span-5 advice-card">
+          <div class="advice-body">
+            <div class="advice-header">
+              <div>
+                <h2 class="section-h2">お出かけ快適指数</h2>
+                <p id="outing-headline" class="muted-xs">絶好のお出かけ日和</p>
+              </div>
+              <div class="score-readout">
+                <span id="outing-score" class="score-num tabular-nums">95</span>
+                <span class="muted-xs">/ 100</span>
+              </div>
+            </div>
+
+            <div class="progress-track">
+              <div id="outing-score-bar" class="progress-fill"></div>
+            </div>
+
+            <div class="advice-list">
+              <div class="advice-item">
+                <span class="advice-emoji" aria-hidden="true">🧥</span>
+                <div>
+                  <div class="advice-title">服装・防寒アドバイス</div>
+                  <p id="advice-outfit" class="advice-desc"></p>
+                </div>
+              </div>
+              <div class="advice-item">
+                <span class="advice-emoji" aria-hidden="true">🧭</span>
+                <div>
+                  <div class="advice-title">過ごし方のヒント</div>
+                  <p id="advice-activity" class="advice-desc"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="advice-tags" class="advice-tags"></div>
+        </div>
+      </section>
+
+      <!-- Hourly Chart & Weekly Forecast -->
+      <section class="grid-12" aria-label="時間別推移と週間予報">
+        <div class="card col-span-7 chart-card">
+          <div class="card-head-row">
+            <div>
+              <h2 class="section-h2">時間別の気温と降水確率</h2>
+              <p class="muted-xs">ポイントにカーソルを合わせるかタップすると詳細を確認できます</p>
+            </div>
+            <div class="legend-row">
+              <span class="legend-item"><span class="legend-dot temp"></span>気温</span>
+              <span class="legend-item"><span class="legend-box rain"></span>降水確率</span>
+            </div>
+          </div>
+
+          <div class="chart-wrapper">
+            <svg id="hourly-chart-svg" class="hourly-svg" role="img" aria-label="時間別気温と降水確率のグラフ"></svg>
+            <div id="hourly-readout" class="hourly-readout"></div>
+          </div>
+        </div>
+
+        <div class="card col-span-5 weekly-card">
+          <div>
+            <h2 class="section-h2">週間予報（7日間）</h2>
+            <p class="muted-xs">日付をクリックすると予報とおすすめスポットが連動します</p>
+          </div>
+          <div id="weekly-forecast-list" class="weekly-list"></div>
+        </div>
+      </section>
+
+      <!-- Recommended Spots -->
+      <section class="spots-section" aria-label="天気に応じたおすすめスポット">
+        <div class="spots-header">
+          <div>
+            <div class="title-row">
+              <h2 class="spots-title">この天気におすすめのスポット</h2>
+              <span id="spot-count-badge" class="pill-primary tabular-nums">0件</span>
+            </div>
+            <p id="spot-section-subtitle" class="muted-text"></p>
+          </div>
+
+          <div class="spots-tools">
+            <div class="search-box">
+              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.3-4.3"></path>
+              </svg>
+              <input id="spot-search" type="search" class="search-input" placeholder="スポット名・特徴で検索…" />
+            </div>
+
+            <button id="fav-filter-btn" type="button" class="action-btn">
+              <span id="fav-filter-heart">♡</span>
+              <span>お気に入り</span>
+              <span id="fav-count" class="tabular-nums muted-text">(0)</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <div id="category-tabs" class="filter-tabs"></div>
+          <div id="env-tabs" class="env-tabs"></div>
+        </div>
+
+        <div id="spots-grid" class="spots-grid"></div>
+
+        <div id="spots-empty" class="empty-state hidden">
+          <div class="empty-icon" aria-hidden="true">🔍</div>
+          <p class="empty-title">条件に合うスポットが見つかりませんでした</p>
+          <p class="muted-xs">フィルターや検索キーワードを変更してお試しください。</p>
+          <button id="reset-filters-btn" type="button" class="primary-btn">フィルターをリセット</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Spot Detail Modal -->
+  <div id="spot-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div id="modal-backdrop" class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div>
+          <div id="modal-badges" class="badge-row"></div>
+          <h3 id="modal-title" class="modal-title"></h3>
+          <p id="modal-access" class="muted-xs"></p>
+        </div>
+        <button id="modal-close-btn" type="button" class="close-btn" aria-label="閉じる">✕</button>
+      </div>
+
+      <div class="modal-fit-box">
+        <div class="modal-fit-head">
+          <span class="advice-title">選択中の天気での過ごし方アドバイス</span>
+          <span id="modal-score-pill" class="score-pill tabular-nums"></span>
+        </div>
+        <p id="modal-weather-tip" class="modal-tip-text"></p>
+      </div>
+
+      <div class="modal-section">
+        <h4 class="modal-label">スポット概要</h4>
+        <p id="modal-description" class="modal-desc"></p>
+      </div>
+
+      <div class="modal-meta-grid">
+        <div class="metric-tile">
+          <div class="muted-xs">おすすめ時間帯</div>
+          <div id="modal-best-time" class="meta-val"></div>
+        </div>
+        <div class="metric-tile">
+          <div class="muted-xs">滞在目安</div>
+          <div id="modal-duration" class="meta-val"></div>
+        </div>
+        <div class="metric-tile">
+          <div class="muted-xs">予算目安</div>
+          <div id="modal-budget" class="meta-val"></div>
+        </div>
+      </div>
+
+      <div id="modal-backup-box" class="backup-box hidden">
+        <div class="backup-head">
+          <span class="advice-title">☔ 急な雨・悪天候時のバックアップ案</span>
+          <button id="modal-jump-backup-btn" type="button" class="link-btn">このスポットを見る →</button>
+        </div>
+        <p id="modal-backup-text" class="muted-xs"></p>
+      </div>
+
+      <div class="modal-footer">
+        <button id="modal-fav-btn" type="button" class="action-btn">
+          <span id="modal-fav-label">♡ お気に入りに追加</span>
+        </button>
+        <button id="modal-done-btn" type="button" class="primary-btn">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
